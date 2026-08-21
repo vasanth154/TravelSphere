@@ -1,0 +1,36 @@
+# Dependencies
+frontend/node_modules/
+backend/.venv/
+backend/__pycache__/
+backend/*.pyc
+backend/alembic.ini
+backend/alembic/
+
+# Environment
+.env
+
+# Database
+*.db
+*.sqlite
+
+# Build artifacts
+frontend/.next/
+frontend/out/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OpenAI/OpenRouter keys
+OPENROUTER_API_KEY:
+TRANSPORT_PROVIDER_*:
+HOTEL_PROVIDER_*:
+
+# Production
+/.vercel
+/export

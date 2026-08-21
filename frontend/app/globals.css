@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+@theme {
+  /* Primary brand — ocean / sky */
+  --color-brand-50: #f0f9ff;
+  --color-brand-100: #e0f2fe;
+  --color-brand-200: #bae6fd;
+  --color-brand-300: #7dd3fc;
+  --color-brand-400: #38bdf8;
+  --color-brand-500: #0ea5e9;
+  --color-brand-600: #0284c7;
+  --color-brand-700: #0369a1;
+  --color-brand-800: #075985;
+  --color-brand-900: #0c4a6e;
+
+  /* Accent — warm sunset */
+  --color-accent-50: #fffbeb;
+  --color-accent-100: #fef3c7;
+  --color-accent-200: #fde68a;
+  --color-accent-300: #fcd34d;
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-accent-700: #b45309;
+
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+
+  --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.05),
+    0 12px 30px rgba(15, 23, 42, 0.08);
+  --shadow-pop: 0 10px 40px rgba(2, 132, 199, 0.18);
+}
+
+/* Reusable base utilities (can be @applied by component classes) */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold
+    transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2;
+}
+@utility card {
+  @apply rounded-2xl border border-slate-100 bg-white shadow-soft;
+}
+@utility badge {
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+}
+@utility field {
+  @apply w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-800
+    shadow-sm transition-colors placeholder:text-slate-400
+    focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+    font-family: var(--font-sans);
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white;
+  }
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+}
+
+@layer components {
+  /* Button variants */
+  .btn-primary {
+    @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700 hover:shadow-pop active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply btn border border-brand-200 bg-white text-brand-700 hover:bg-brand-50 active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-slate-600 hover:bg-slate-100;
+  }
+  .btn-accent {
+    @apply btn bg-accent-500 text-white shadow-sm hover:bg-accent-600 active:scale-[0.98];
+  }
+  .btn-lg {
+    @apply px-7 py-4 text-base;
+  }
+  .btn-sm {
+    @apply px-4 py-2 text-xs;
+  }
+  .btn-block {
+    @apply w-full;
+  }
+
+  /* Card variants */
+  .card-hover {
+    @apply card transition-all duration-300 hover:-translate-y-1 hover:shadow-card;
+  }
+
+  /* Badge variants */
+  .badge-brand {
+    @apply badge bg-brand-100 text-brand-700;
+  }
+  .badge-accent {
+    @apply badge bg-accent-100 text-accent-700;
+  }
+  .badge-green {
+    @apply badge bg-emerald-100 text-emerald-700;
+  }
+  .badge-rose {
+    @apply badge bg-rose-100 text-rose-700;
+  }
+  .badge-slate {
+    @apply badge bg-slate-100 text-slate-600;
+  }
+
+  /* Form helpers */
+  .field-label {
+    @apply mb-1.5 block text-sm font-semibold text-slate-700;
+  }
+  .field-error {
+    @apply mt-1 text-xs font-medium text-rose-600;
+  }
+
+  /* Layout helpers */
+  .section {
+    @apply mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20;
+  }
+  .eyebrow {
+    @apply mb-3 inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand-700;
+  }
+  .h2 {
+    @apply text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl;
+  }
+  .lede {
+    @apply mt-3 max-w-2xl text-base text-slate-500 sm:text-lg;
+  }
+  .app-shell {
+    @apply min-h-screen bg-slate-50;
+  }
+}

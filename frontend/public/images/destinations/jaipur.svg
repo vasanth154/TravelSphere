@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="900" height="600" preserveAspectRatio="xMidYMid slice" role="img" aria-label="destination">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="55%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="600" fill="url(#g)"/>
+  <circle cx="690" cy="140" r="86" fill="#ffffff" opacity="0.14"/>
+  <path d="M0 430 q160 -70 320 -20 q200 70 380 -6 q120 -50 200 -8 v204 h-900z" fill="#ffffff" opacity="0.08"/>
+  <g fill="#0b1220" opacity="0.82">
+        <path d="M320 470 l20 -190 h240 l20 190z"/>
+        <path d="M300 280 h300 l-22 -26 h-256z"/>
+        <g fill="#ffffff" opacity="0.12">
+          <path d="M348 448 v-92 a12 12 0 0 1 24 0 v92z"/><path d="M392 448 v-92 a12 12 0 0 1 24 0 v92z"/><path d="M436 448 v-92 a12 12 0 0 1 24 0 v92z"/><path d="M480 448 v-92 a12 12 0 0 1 24 0 v92z"/><path d="M524 448 v-92 a12 12 0 0 1 24 0 v92z"/><path d="M568 448 v-92 a12 12 0 0 1 24 0 v92z"/>
+        </g>
+        <path d="M430 250 h40 v-30 h-40z"/>
+      </g>
+  <rect x="0" y="470" width="900" height="130" fill="#000000" opacity="0.20"/>
+  <g stroke="#ffffff" stroke-width="3" opacity="0.10" fill="none">
+    <path d="M120 512 q60 -10 120 0"/><path d="M520 540 q70 -10 140 0"/><path d="M260 560 q80 -8 160 0"/>
+  </g>
+</svg>
