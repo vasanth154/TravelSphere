@@ -2,15 +2,13 @@
 # Deploy with: https://render.com/new OR connect this repo and press "Apply"
 # after selecting the "Blueprint" type.
 
-services:
-  # PostgreSQL database
-  - type: pgsql
-    name: travelsphere-db
+# Render PostgreSQL database (correct Blueprint spec: top-level `databases` key)
+databases:
+  - name: travelsphere-db
     plan: free
-    database: travelsphere
-    user: travelsphere
 
-  # FastAPI web service
+# FastAPI web service
+services:
   - type: web
     name: travelsphere-backend
     runtime: python
