@@ -35,10 +35,8 @@ services:
       - key: ADMIN_EMAIL
         value: admin@travelsphere.com
       - key: ADMIN_PASSWORD
-        sync: false
         generateValue: true
       - key: SECRET_KEY
-        sync: false
         generateValue: true
       # --- Email confirmation (optional, free SMTP) ---
       - key: ENABLE_EMAIL
