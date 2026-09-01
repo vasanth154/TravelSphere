@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState, Suspense } from "react";
+import { useMemo, useState, Suspense, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, SlidersHorizontal, MapPin, Star, X } from "lucide-react";
+import { Search, SlidersHorizontal, MapPin, Star, X, Sparkles } from "lucide-react";
 import { HOTELS } from "../../lib/demo-data";
 import { HotelCard } from "../../components/HotelCard";
 import { Button } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
 import { Badge } from "../../components/ui/Badge";
+import { searchHotels, toFrontendHotel, recommendHotel, BackendHotel } from "../../lib/api";
 
 const AMENITIES = ["Free WiFi", "Pool", "Spa", "Restaurant", "Parking", "Beachfront", "Gym", "Bar"];
 
@@ -19,8 +20,23 @@ function HotelsInner() {
   const [guests, setGuests] = useState(2);
   const [maxPrice, setMaxPrice] = useState(20000);
   const [activeAmen, setActiveAmen] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(false);
+  const [liveHotels, setLiveHotels] = useState<BackendHotel[]>([]);
+  const [aiPick, setAiPick] = useState<{ name: string; reason: string } | null>(null);
+  const [usingDemo, setUsingDemo] = useState(true);
 
   const results = useMemo(() => {
+    if (liveHotels.length > 0) {
+      return liveHotels
+        .filter((h) => {
+          if (city && !h.city.toLowerCase().includes(city.toLowerCase())) return false;
+          if (h.price_per_night > maxPrice) return false;
+          if (activeAmen.size > 0 && !Array.from(activeAmen).every((a) => h.amenities.includes(a)))
+            return false;
+          return true;
+        })
+        .map(toFrontendHotel);
+    }
     return HOTELS.filter((h) => {
       if (city && !h.city.toLowerCase().includes(city.toLowerCase())) return false;
       if (h.pricePerNight > maxPrice) return false;
@@ -28,7 +44,47 @@ function HotelsInner() {
         return false;
       return true;
     });
-  }, [city, maxPrice, activeAmen]);
+  }, [city, maxPrice, activeAmen, liveHotels]);
+
+  const runSearch = useCallback(async () => {
+    if (!city) return;
+    setLoading(true);
+    setAiPick(null);
+    try {
+      const [res, rec] = await Promise.all([
+        searchHotels({
+          destination: city,
+          checkin: checkin || undefined,
+          checkout: checkout || undefined,
+          guests,
+          max_price: maxPrice,
+        }),
+        recommendHotel({ destination: city, guests, max_price: maxPrice, travel_purpose: "leisure" }),
+      ]);
+      setLiveHotels(res.hotels);
+      setUsingDemo(res.is_demo);
+      try {
+        sessionStorage.setItem("ts_hotels", JSON.stringify(res.hotels));
+      } catch {
+        /* storage unavailable */
+      }
+      if (rec.recommendation) {
+        setAiPick({ name: rec.recommendation.name, reason: rec.reason });
+      }
+    } catch {
+      setLiveHotels([]);
+      setUsingDemo(true);
+    } finally {
+      setLoading(false);
+    }
+    document.getElementById("hotel-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [city, checkin, checkout, guests, maxPrice]);
+
+  // Initial load when arriving with a city in the URL (e.g. from destination cards)
+  useEffect(() => {
+    if (city) void runSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggle = (a: string) =>
     setActiveAmen((p) => {
@@ -44,7 +100,13 @@ function HotelsInner() {
         <h1 className="h2">Find your perfect stay</h1>
 
         {/* Search bar */}
-        <form className="card-hover mt-6 rounded-3xl bg-white p-5 shadow-card sm:p-6">
+        <form
+          className="card-hover mt-6 rounded-3xl bg-white p-5 shadow-card sm:p-6"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void runSearch();
+          }}
+        >
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_0.7fr_auto] lg:items-end">
             <Field label="Destination" htmlFor="city">
               <input id="city" className="field" placeholder="City or hotel name"
@@ -62,7 +124,7 @@ function HotelsInner() {
               <input id="g" type="number" min={1} max={12} className="field"
                 value={guests} onChange={(e) => setGuests(Number(e.target.value))} />
             </Field>
-            <Button className="lg:h-[50px]" type="button">
+            <Button className="lg:h-[50px]" type="submit" loading={loading}>
               <Search className="h-4 w-4" /> Search
             </Button>
           </div>
@@ -105,7 +167,7 @@ function HotelsInner() {
               </div>
               {(city || activeAmen.size > 0 || maxPrice < 20000) && (
                 <Button variant="ghost" size="sm" className="mt-5"
-                  onClick={() => { setCity(""); setActiveAmen(new Set()); setMaxPrice(20000); }}>
+                  onClick={() => { setCity(""); setActiveAmen(new Set()); setMaxPrice(20000); setLiveHotels([]); setUsingDemo(true); }}>
                   <X className="h-4 w-4" /> Clear filters
                 </Button>
               )}
@@ -113,11 +175,24 @@ function HotelsInner() {
           </aside>
 
           {/* Results */}
-          <div>
+          <div id="hotel-results">
             <p className="mb-4 text-sm text-slate-500">
               <span className="font-bold text-slate-800">{results.length}</span> stays
-              <Badge tone="accent" className="ml-2">Demo data</Badge>
+              <Badge tone={usingDemo ? "accent" : "green"} className="ml-2">
+                {usingDemo ? "Demo data" : "Live search"}
+              </Badge>
             </p>
+
+            {aiPick && (
+              <div className="mb-4 flex items-start gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-4">
+                <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
+                <div>
+                  <div className="text-sm font-bold text-brand-800">AI pick · {aiPick.name}</div>
+                  <p className="mt-0.5 text-sm text-brand-700">{aiPick.reason}</p>
+                </div>
+              </div>
+            )}
+
             {results.length === 0 ? (
               <div className="card p-10 text-center text-slate-500">
                 No stays match your filters. Try widening your search.

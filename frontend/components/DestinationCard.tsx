@@ -29,6 +29,7 @@ export function DestinationCard({
         <SmartImage
           src={image}
           alt={name}
+          fill
           gradient={gradient}
           className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />

@@ -11,13 +11,13 @@ export function formatDuration(minutes: number): string {
 }
 
 export function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) {
     return iso;
   }
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }

@@ -1,13 +1,14 @@
 # Dependencies
 frontend/node_modules/
 backend/.venv/
-backend/__pycache__/
-backend/*.pyc
-backend/alembic.ini
-backend/alembic/
+__pycache__/
+*.py[cod]
 
 # Environment
 .env
+
+# Build artifacts
+*.tsbuildinfo
 
 # Database
 *.db

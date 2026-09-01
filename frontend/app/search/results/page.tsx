@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, SlidersHorizontal, CheckCircle2, Route, Plane, Train, Bus, Car, Search, Check, ArrowRight as ArrowRightIcon } from "lucide-react";
+import { ArrowLeft, SlidersHorizontal, CheckCircle2, Route, Plane, Train, Bus, Car, Search, Check, Copy, Wallet, Timer, Crown, ArrowRight as ArrowRightIcon } from "lucide-react";
 import {
   SearchResponse,
   compareTransport,
@@ -11,10 +12,13 @@ import {
   ComparisonResult,
   TransportOption,
 } from "../../../lib/api";
+import { decodeSearchResult, encodeSearchResult } from "../../../lib/search-url";
+import { formatINR, formatDuration } from "../../../lib/format";
 import { TransportCard } from "../../../components/TransportCard";
 import { Button } from "../../../components/ui/Button";
 import { Badge } from "../../../components/ui/Badge";
 import { Spinner } from "../../../components/ui/Spinner";
+import { SwapButton } from "../../../components/ui/SwapButton";
 import { ItineraryBuilder } from "../../../components/ItineraryBuilder";
 
 type SortKey = "recommended" | "cheapest" | "fastest";
@@ -87,8 +91,18 @@ export default function ResultsPage() {
   });
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    const fromUrl = decodeSearchResult(window.location.search);
+    if (fromUrl) {
+      setData(fromUrl);
+      setProfile(undefined);
+      compareTransport(fromUrl.options)
+        .then(setComparison)
+        .finally(() => setLoading(false));
+      return;
+    }
     const raw = sessionStorage.getItem("searchResults");
     if (!raw) {
       setLoading(false);
@@ -119,7 +133,7 @@ export default function ResultsPage() {
 
       const res = await searchTransport(params);
       sessionStorage.setItem("searchResults", JSON.stringify(res));
-      router.push("/search/results");
+      router.push(`/search/results?${encodeSearchResult(res)}`);
     } catch (err) {
       setSearchError("Search failed. Please try again.");
     } finally {
@@ -149,6 +163,16 @@ export default function ResultsPage() {
       "ts_transport",
       JSON.stringify({ ...opt, route: `${data?.origin} → ${data?.destination}` }),
     );
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
   };
 
   const visible = useMemo(() => {
@@ -186,7 +210,7 @@ export default function ResultsPage() {
             <div className="card p-6 shadow-lg sm:p-8 lg:p-10">
               <div className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
+                  <div className="relative">
                     <label className="field-label" htmlFor="origin">From</label>
                     <input
                       id="origin"
@@ -203,6 +227,11 @@ export default function ResultsPage() {
                         <option key={c} value={c} />
                       ))}
                     </datalist>
+                    <SwapButton
+                      onSwap={() =>
+                        setSearchForm((s) => ({ ...s, origin: s.destination, destination: s.origin }))
+                      }
+                    />
                   </div>
                   <div>
                     <label className="field-label" htmlFor="destination">To</label>
@@ -311,10 +340,12 @@ export default function ResultsPage() {
                   className="card-hover group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 transition-all hover:-translate-y-1 hover:shadow-card"
                 >
                   <div className="relative aspect-video overflow-hidden rounded-xl">
-                    <img
+                    <Image
                       src={dest.image}
                       alt={dest.name}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      fill
+                      sizes="(max-width: 640px) 100vw, 25vw"
+                      className="object-cover transition-transform group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <div className="absolute bottom-3 left-3 text-white">
@@ -387,9 +418,27 @@ export default function ResultsPage() {
               </div>
             </div>
           </div>
-          <Link href="/search" className="btn-secondary btn-sm">
-            <ArrowLeft className="h-4 w-4" /> Modify
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="btn-secondary btn-sm"
+              aria-label={copied ? "Link copied" : "Copy link to this trip"}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4" /> Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" /> Share
+                </>
+              )}
+            </button>
+            <Link href="/search" className="btn-secondary btn-sm">
+              <ArrowLeft className="h-4 w-4" /> Modify
+            </Link>
+          </div>
         </div>
 
         {saved && (
@@ -399,6 +448,58 @@ export default function ResultsPage() {
             <Link href="/hotels" className="ml-auto font-bold text-emerald-800 hover:underline">
               Add a hotel <ArrowRightIcon className="h-4 w-4" />
             </Link>
+          </div>
+        )}
+
+        {comparison && (
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {[
+              {
+                key: "cheapest" as const,
+                label: "Cheapest",
+                icon: Wallet,
+                value: comparison.cheapest
+                  ? `${formatINR(comparison.cheapest.price)} · ${formatDuration(comparison.cheapest.duration)}`
+                  : "—",
+              },
+              {
+                key: "fastest" as const,
+                label: "Fastest",
+                icon: Timer,
+                value: comparison.fastest
+                  ? `${formatDuration(comparison.fastest.duration)}`
+                  : "—",
+              },
+              {
+                key: "recommended" as const,
+                label: "Best value",
+                icon: Crown,
+                value: comparison.best_value
+                  ? `${formatINR(comparison.best_value.price)} · ${formatDuration(comparison.best_value.duration)}`
+                  : "—",
+              },
+            ].map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={() => setSort(chip.key)}
+                className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition-all ${
+                  sort === chip.key
+                    ? "border-brand-500 bg-brand-50 shadow-soft"
+                    : "border-slate-200 bg-white hover:border-brand-200"
+                }`}
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600/10 text-brand-600">
+                  <chip.icon className="h-4 w-4" />
+                </span>
+                <span>
+                  <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    {chip.label}
+                  </span>
+                  <span className="block text-sm font-bold text-slate-900">{chip.value}</span>
+                </span>
+              </button>
+            ))}
           </div>
         )}
 

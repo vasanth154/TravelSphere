@@ -17,6 +17,7 @@ import { searchTransport } from "../lib/api";
 import { SmartImage } from "../components/SmartImage";
 import { Button } from "../components/ui/Button";
 import { Field } from "../components/ui/Field";
+import { SwapButton } from "../components/ui/SwapButton";
 import { DestinationCard } from "../components/DestinationCard";
 import { HotelCard } from "../components/HotelCard";
 
@@ -98,15 +99,18 @@ export default function Home() {
             className="card-hover rounded-3xl bg-white/95 p-5 shadow-card backdrop-blur sm:p-6"
           >
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1.2fr_1.2fr_1fr_0.8fr_auto] lg:items-end">
-              <Field label="From" htmlFor="origin" required>
-                <input
-                  id="origin"
-                  className="field"
-                  value={form.origin}
-                  onChange={(e) => setForm({ ...form, origin: e.target.value })}
-                  required
-                />
-              </Field>
+              <div className="relative">
+                <Field label="From" htmlFor="origin" required>
+                  <input
+                    id="origin"
+                    className="field"
+                    value={form.origin}
+                    onChange={(e) => setForm({ ...form, origin: e.target.value })}
+                    required
+                  />
+                </Field>
+                <SwapButton onSwap={() => setForm((f) => ({ ...f, origin: f.destination, destination: f.origin }))} />
+              </div>
               <Field label="To" htmlFor="destination" required>
                 <input
                   id="destination"

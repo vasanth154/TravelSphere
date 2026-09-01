@@ -1,0 +1,66 @@
+# Render Blueprint - TravelSphere backend + PostgreSQL
+# Deploy with: https://render.com/new OR connect this repo and press "Apply"
+# after selecting the "Blueprint" type.
+
+services:
+  # PostgreSQL database
+  - type: pgsql
+    name: travelsphere-db
+    plan: free
+    database: travelsphere
+    user: travelsphere
+
+  # FastAPI web service
+  - type: web
+    name: travelsphere-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && python start_server.py
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: travelsphere-db
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "30"
+      - key: ADMIN_EMAIL
+        value: admin@travelsphere.com
+      - key: ADMIN_PASSWORD
+        sync: false
+        generateValue: true
+      - key: SECRET_KEY
+        sync: false
+        generateValue: true
+      # --- Email confirmation (optional, free SMTP) ---
+      - key: ENABLE_EMAIL
+        value: "false"
+      - key: SMTP_HOST
+        value: ""
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: ""
+      - key: SMTP_PASSWORD
+        value: ""
+      - key: SMTP_FROM
+        value: ""
+      - key: SMTP_FROM_NAME
+        value: "TravelSphere"
+      - key: SMTP_TLS
+        value: "true"
+      # --- SMS via carrier gateway (optional, free) ---
+      - key: ENABLE_SMS
+        value: "false"
+      - key: SMS_GATEWAY_DOMAIN
+        value: ""

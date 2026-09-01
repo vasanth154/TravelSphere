@@ -1,19 +1,30 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 /**
  * Image with a branded gradient fallback so the UI still looks premium
  * if the remote photo fails to load (e.g. offline).
+ *
+ * Uses next/image's optimized renderer when `width`, `height` or `fill` is
+ * provided; otherwise falls back to a plain sized `<img>` for callers that
+ * control sizing purely via className.
  */
 export function SmartImage({
   src,
   alt,
+  width,
+  height,
+  fill,
   className = "",
   gradient = "from-brand-500 via-cyan-500 to-brand-700",
 }: {
   src: string;
   alt: string;
+  width?: number;
+  height?: number;
+  fill?: boolean;
   className?: string;
   gradient?: string;
 }) {
@@ -31,6 +42,20 @@ export function SmartImage({
           </svg>
         </span>
       </div>
+    );
+  }
+  if (fill || width || height) {
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        width={width ?? 0}
+        height={height ?? 0}
+        fill={fill ?? undefined}
+        sizes="(max-width: 768px) 100vw, 50vw"
+        onError={() => setFailed(true)}
+        className={className}
+      />
     );
   }
   return (

@@ -16,6 +16,7 @@ import { DESTINATIONS } from "../../lib/demo-data";
 import { Button } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
 import { Badge } from "../../components/ui/Badge";
+import { SwapButton } from "../../components/ui/SwapButton";
 
 const TRIP_TYPES = [
   { id: "leisure", label: "Leisure", icon: "🌴", profile: "comfort_focused" },
@@ -116,10 +117,13 @@ export default function PlanPage() {
             {/* Step 1: Where */}
             <Section step={0} active={step} title="Where are you going?" icon={MapPin}>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="From" htmlFor="origin" required>
-                  <input id="origin" list="cities" className="field" value={form.origin}
-                    onChange={(e) => set("origin", e.target.value)} required />
-                </Field>
+                <div className="relative">
+                  <Field label="From" htmlFor="origin" required>
+                    <input id="origin" list="cities" className="field" value={form.origin}
+                      onChange={(e) => set("origin", e.target.value)} required />
+                  </Field>
+                  <SwapButton onSwap={() => setForm((f) => ({ ...f, origin: f.destination, destination: f.origin }))} />
+                </div>
                 <Field label="To" htmlFor="destination" required>
                   <input id="destination" list="cities" className="field" value={form.destination}
                     onChange={(e) => set("destination", e.target.value)} required />

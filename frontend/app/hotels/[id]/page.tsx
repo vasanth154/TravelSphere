@@ -1,43 +1,46 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Star,
   MapPin,
   Check,
   ChevronLeft,
-  Wifi,
-  Waves,
-  Utensils,
-  Car as CarIcon,
-  Dumbbell,
-  Wine,
-  Flower2,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { getHotel } from "../../../lib/demo-data";
 import { SmartImage } from "../../../components/SmartImage";
+import { FacilityTile } from "../../../components/FacilityTile";
 import { Button } from "../../../components/ui/Button";
 import { Badge } from "../../../components/ui/Badge";
 import { formatINR } from "../../../lib/format";
-
-const AMEN_ICON: Record<string, any> = {
-  "Free WiFi": Wifi,
-  Pool: Waves,
-  Spa: Flower2,
-  Restaurant: Utensils,
-  Parking: CarIcon,
-  Gym: Dumbbell,
-  Bar: Wine,
-};
+import { BackendHotel, toFrontendHotel } from "../../../lib/api";
 
 export default function HotelDetails() {
   const params = useParams<{ id: string }>();
-  const hotel = getHotel(params.id);
+  const router = useRouter();
+  const [hotel, setHotel] = useState(() => getHotel(params.id));
   const [activeImg, setActiveImg] = useState(0);
   const [booked, setBooked] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Live-search hotels are stored in sessionStorage by the hotels page.
+    if (!getHotel(params.id)) {
+      try {
+        const raw = sessionStorage.getItem("ts_hotels");
+        if (raw) {
+          const list = JSON.parse(raw) as BackendHotel[];
+          const found = list.find((h) => h.id === params.id);
+          if (found) setHotel(toFrontendHotel(found));
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [params.id]);
 
   if (!hotel) {
     return (
@@ -53,6 +56,16 @@ export default function HotelDetails() {
   }
 
   const images = hotel.images.length ? hotel.images : [hotel.image];
+
+  const handleBook = () => {
+    const params = new URLSearchParams({
+      item_type: "hotel",
+      title: hotel.name,
+      destination: hotel.location,
+      price: String(hotel.pricePerNight),
+    });
+    router.push(`/bookings/new?${params.toString()}`);
+  };
 
   return (
     <div className="app-shell">
@@ -91,7 +104,7 @@ export default function HotelDetails() {
                 <Badge tone="accent">
                   <Star className="h-3 w-3 fill-accent-500" /> {hotel.rating}
                 </Badge>
-                <span className="text-sm text-slate-500">({hotel.reviews.toLocaleString("en-IN")} reviews)</span>
+                <span className="text-sm text-slate-500">({(hotel.reviews || 0).toLocaleString("en-IN")} reviews)</span>
               </div>
               <p className="mt-2 flex items-center gap-1 text-slate-500">
                 <MapPin className="h-4 w-4" /> {hotel.location}
@@ -102,17 +115,14 @@ export default function HotelDetails() {
             <h2 className="mt-8 text-xl font-bold text-slate-900">About this hotel</h2>
             <p className="mt-2 leading-relaxed text-slate-600">{hotel.description}</p>
 
-            {/* Amenities */}
-            <h2 className="mt-8 text-xl font-bold text-slate-900">Amenities</h2>
+            {/* Facility photo gallery */}
+            <h2 className="mt-8 flex items-center gap-2 text-xl font-bold text-slate-900">
+              <Sparkles className="h-5 w-5 text-brand-500" /> Facilities & photos
+            </h2>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {hotel.amenities.map((a) => {
-                const Icon = AMEN_ICON[a] ?? Check;
-                return (
-                  <div key={a} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                    <Icon className="h-4 w-4 text-brand-600" /> {a}
-                  </div>
-                );
-              })}
+              {hotel.amenities.map((a, i) => (
+                <FacilityTile key={a} amenity={a} index={i} />
+              ))}
             </div>
 
             {/* Policies */}
@@ -145,7 +155,7 @@ export default function HotelDetails() {
               <div className="mt-4 space-y-3">
                 <div className="rounded-xl border border-slate-200 p-3">
                   <div className="text-xs font-semibold text-slate-500">Coordinates</div>
-                  <div className="text-sm text-slate-700">{hotel.coords}</div>
+                  <div className="text-sm text-slate-700">{hotel.coords || "Near city centre"}</div>
                 </div>
 
                 <div>
@@ -186,11 +196,11 @@ export default function HotelDetails() {
 
                 <Button fullWidth size="lg"
                   disabled={!booked}
-                  onClick={() => alert("Demo booking — connect a payment provider to confirm real reservations.")}>
+                  onClick={handleBook}>
                   {booked ? `Book ${booked}` : "Select a room"}
                 </Button>
                 <p className="text-center text-xs text-slate-400">
-                  Demo experience · payments not connected
+                  You&apos;ll get an instant ticket with a unique ID
                 </p>
               </div>
             </div>

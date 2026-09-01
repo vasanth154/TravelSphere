@@ -1,26 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Users, Hotel, MapPin, CreditCard, TrendingUp, Activity } from "lucide-react";
 import { adminDashboardStats } from "../../lib/api";
-import { Button } from "../../components/ui/Button";
+import { useAdminData } from "../../hooks/useAdminData";
 import { Card } from "../../components/ui/Card";
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<{
+  const { data: stats, loading, error } = useAdminData<{
     total_users: number;
     total_admins: number;
     total_customers: number;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    adminDashboardStats()
-      .then((data) => setStats(data))
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load stats"))
-      .finally(() => setLoading(false));
-  }, []);
+  }>({ load: adminDashboardStats });
 
   const statCards = [
     { label: "Total Users", value: stats?.total_users ?? 0, icon: Users, color: "bg-brand-500" },
